@@ -46,22 +46,22 @@ export default class GameScene extends Phaser.Scene {
     );
 
     //ground stuff
-    this.ground = this.add.sprite(0, this.cameras.main.height, "tileUpper");
+    // this.ground = this.add.sprite(0, this.cameras.main.height, "tileUpper");
 
     // group with all active platforms.
-    this.platformGroup = this.add.group({
-      // once a platform is removed, it's added to the pool
-      removeCallback: function (platform) {
-        this.platformPool.add(platform);
-      },
-    });
-    // pool
-    this.platformPool = this.add.group({
-      // once a platform is removed from the pool, it's added to the active platforms group
-      removeCallback: function (platform) {
-        this.platformGroup.add(platform);
-      },
-    });
+    // this.platformGroup = this.add.group({
+    //   // once a platform is removed, it's added to the pool
+    //   removeCallback: function (platform) {
+    //     this.platformPool.add(platform);
+    //   },
+    // });
+    // // pool
+    // this.platformPool = this.add.group({
+    //   // once a platform is removed from the pool, it's added to the active platforms group
+    //   removeCallback: function (platform) {
+    //     this.platformGroup.add(platform);
+    //   },
+    // });
     //Player Stuff
     this.mc = new MC(this, 200, 300);
     this.cursorKeys = this.input.keyboard.createCursorKeys();
@@ -116,30 +116,11 @@ export default class GameScene extends Phaser.Scene {
       this.mc.play("walk");
     }
 
-    //Ducking
-    if (this.cursorKeys.down.isDown) {
-      if (!this.jumping) {
-        this.jumping = true;
-      }
-    }
-  }
-
-  addPlatform(platformWidth, posX){
-    let platform;
-    if(this.platformPool.getLength()){
-      platform = this.platformPool.getFirst();
-      platform.x = posX;
-      platform.active = true;
-      platform.visible = true;
-      this.platformPool.remove(platform);
-    }
-    else{
-      platform = this.physics.add.sprite(posX, this.cameras.main.height*0.95, "tileUpper");
-      platform.setImmovable = true;
-      platform.visible = true;
-      this.platformGroup.add(platform)
-    }
-    platform.displayWidth = platformWidth;
-    this.nextPlatformDistance = Phaser.Math.Between(gameOptions.spawnRange[0], gameOptions.spawnRange[1]);
+    // //Ducking
+    // if (this.cursorKeys.down.isDown) {
+    //   if (!this.jumping) {
+    //     this.jumping = true;
+    //   }
+    // }
   }
 }
