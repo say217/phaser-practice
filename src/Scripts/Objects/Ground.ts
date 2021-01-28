@@ -17,4 +17,12 @@ export default class Ground extends Phaser.Physics.Arcade.Sprite {
       this.x += (this.scene as GameScene).getGroundLimit() * 64;
     }
   }
+
+  removeUpdateListener() {
+    this.scene.events.removeListener(
+      Phaser.Scenes.Events.UPDATE,
+      this.update,
+      this
+    );
+  }
 }

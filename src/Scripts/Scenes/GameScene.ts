@@ -99,7 +99,8 @@ export default class GameScene extends Phaser.Scene {
       "keydown-R",
       function (event: any) {
         if(!(this as GameScene).isPlaying){
-          (this as GameScene).scene.restart();
+          this.unhookListener();
+          this.scene.start("GameScene");
         }
       },
       this
@@ -233,6 +234,14 @@ export default class GameScene extends Phaser.Scene {
       { fontSize: "44px", fontStyle: "Bold" }
     );
     gameOverText.setOrigin(0.5, 0.5);
+
+    let restartText = this.add.text(
+      this.cameras.main.width / 2,
+      this.cameras.main.height / 2 + 100,
+      "Press 'R' to restart",
+      { fontSize: "44px", fontStyle: "Bold" }
+    );
+    restartText.setOrigin(0.5, 0.5);
   }
 
   getInteractableGroup(): Phaser.GameObjects.Group{
@@ -241,5 +250,21 @@ export default class GameScene extends Phaser.Scene {
 
   getPlayState(): boolean{
     return this.isPlaying;
+  }
+
+  unhookListener(): void{
+    this.groundGroup.getChildren().forEach((item: Ground, index)=>{
+      console.log(item.x);
+      item.removeUpdateListener();
+    });
+    this.interactableGroup.getChildren().forEach((item: Ground, index)=>{
+      console.log(item.x);
+      item.removeUpdateListener();
+
+    });
+    this.interactablePool.getChildren().forEach((item: Ground, index)=>{
+      console.log(item.x);
+      item.removeUpdateListener();
+    });
   }
 }

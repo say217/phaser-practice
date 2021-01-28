@@ -1,10 +1,16 @@
 import * as Phaser from "phaser";
-import GameScene from "../Scenes/GameScene"
+import GameScene from "../Scenes/GameScene";
 
 export default class Interactable extends Phaser.Physics.Arcade.Sprite {
   private isObstacle: boolean;
-  private 
-  constructor(scene: Phaser.Scene, x: number, y: number, sprite: string, isObstacle: boolean) {
+  private;
+  constructor(
+    scene: Phaser.Scene,
+    x: number,
+    y: number,
+    sprite: string,
+    isObstacle: boolean
+  ) {
     super(scene, x, y, sprite);
     this.scene.add.existing(this);
     this.scene.physics.add.existing(this);
@@ -17,17 +23,25 @@ export default class Interactable extends Phaser.Physics.Arcade.Sprite {
     this.scene.events.on(Phaser.Scenes.Events.UPDATE, this.update, this);
   }
 
-  update(){
+  update() {
     if (this.x <= -32) {
       let objectGroup = (this.scene as GameScene).getInteractableGroup();
-      if(objectGroup.getChildren().indexOf(this) > -1) {
+      if (objectGroup.getChildren().indexOf(this) > -1) {
         objectGroup.killAndHide(this);
-        objectGroup.remove(this);     
+        objectGroup.remove(this);
       }
     }
   }
 
-  IsObstacle(){
+  IsObstacle() {
     return this.isObstacle;
+  }
+
+  removeUpdateListener() {
+    this.scene.events.removeListener(
+      Phaser.Scenes.Events.UPDATE,
+      this.update,
+      this
+    );
   }
 }
