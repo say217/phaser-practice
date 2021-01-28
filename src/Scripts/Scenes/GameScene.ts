@@ -6,6 +6,7 @@ import Score from "../Objects/Score";
 import Interactable from "../Objects/Interactable";
 import Coin from "../Objects/Coin";
 import Spike from "../Objects/Spike";
+import { parseConfigFileTextToJson } from "typescript";
 
 export default class GameScene extends Phaser.Scene {
   private fpsText: FpsText;
@@ -20,12 +21,23 @@ export default class GameScene extends Phaser.Scene {
   private groundGroup: Phaser.GameObjects.Group;
   private interactableGroup: Phaser.GameObjects.Group;
   private interactablePool: Phaser.GameObjects.Group;
+  private isPlaying: boolean;
+  private jumpSound: Phaser.Sound.BaseSound;
+  private coinSound: Phaser.Sound.BaseSound;
+  private stabSound: Phaser.Sound.BaseSound;
 
   constructor() {
     super({ key: "GameScene" });
   }
 
   create(): void {
+    console.log("Game Started");
+
+    //Audio Stuff
+    this.jumpSound = this.sound.add('jump')
+    this.coinSound = this.sound.add('coin')
+    this.stabSound = this.sound.add('stab')
+
     //BG Stuff
     this.mountainsBack = this.add.tileSprite(
       this.cameras.main.width / 2,
@@ -56,27 +68,20 @@ export default class GameScene extends Phaser.Scene {
 
     //Interactable Stuff
     this.interactableGroup = this.add.group({
-      defaultKey: "interactable",
-      maxSize: 3,
+      maxSize: 5,
       removeCallback: function (interactable: Interactable) {
         (interactable.scene as GameScene).interactablePool.add(interactable);
       },
     });
 
     this.interactablePool = this.add.group({
-      defaultKey: "interactable",
-      maxSize: 3,
+      maxSize: 5,
       removeCallback: function (interactable: Interactable) {
         (interactable.scene as GameScene).interactableGroup.add(interactable);
       },
     });
 
-    //new Coin(this, (this.groundLimit*64)-32, this.cameras.main.height - 96)
-
-    //this.interactablePool.add();
-    this.interactableGroup.add(new Spike(this, (this.groundLimit*64)-32, this.cameras.main.height - 96))
-    let interactable = this.interactableGroup.getFirst();
-    interactable.x;
+    this.addInteractable();
 
     //Player Stuff
     this.mc = new MC(this, 200, 300);
@@ -85,56 +90,85 @@ export default class GameScene extends Phaser.Scene {
     //GUI Stuff
     this.fpsText = new FpsText(this);
     this.scoreText = new Score(this, this.cameras.main.width / 2, 50);
+
+    //Playing State
+    this.isPlaying = true;
+
+    //Reset Button
+    this.input.keyboard.on(
+      "keydown-R",
+      function (event: any) {
+        if(!(this as GameScene).isPlaying){
+          console.log("R Pressed");
+        }
+      },
+      this
+    );
+    
+    this.time.addEvent({
+      delay: 5000,
+      loop: true,
+      callback: () => {
+        if(this.isPlaying){
+          this.addInteractable();
+        }
+      },
+    });
   }
 
   update(): void {
-    //enable jump
-    this.physics.collide(
-      this.mc,
-      this.groundGroup,
-      function (mc, ground) {
-        if (this.jumping) {
-          this.jumping = false;
-          this.mc.play("walk");
-        }
-      },
-      null,
-      this
-    );
-
-    //obstacle or coin collision 
-    this.physics.overlap(
-      this.mc,
-      this.interactableGroup,
-      function (mc, interactable: Interactable) {
-        console.log("masuk 1");
-        switch (interactable.IsObstacle()) {
-          case false:
-            //is a Coin
-            console.log("masuk coin");
-            this.scoreText.incrementScore();
-            this.interactableGroup.killAndHide(interactable);
-            this.interactableGroup.remove(interactable);
-          case true:
-            //is an Obstacle
-            console.log("masuk obstacle")
-            this.physics.pause();
+    if (this.isPlaying) {
+      //enable jump
+      this.physics.collide(
+        this.mc,
+        this.groundGroup,
+        function (mc, ground) {
+          if (this.jumping) {
+            this.jumping = false;
+            this.mc.play("walk");
           }
-      },
-      null,
-      this
-    );
+        },
+        null,
+        this
+      );
 
+      //obstacle or coin collision
+      this.physics.overlap(
+        this.mc,
+        this.interactableGroup,
+        function (mc, interactable: Interactable) {
+          console.log("masuk 1");
+          console.log(interactable.IsObstacle());
+          switch (interactable.IsObstacle()) {
+            case false:
+              //is a Coin
+              console.log("masuk coin");
+              this.coinSound.play();
+              this.scoreText.incrementScore();
+              this.interactableGroup.killAndHide(interactable);
+              this.interactableGroup.remove(interactable);
+              break;
+            case true:
+              //is an Obstacle
+              console.log("masuk obstacle");
+              this.stabSound.play();
+              (interactable.scene as GameScene).pauseAll();
+              break;
+          }
+        },
+        null,
+        this
+      );
 
+      this.mountainsBack.tilePositionX += 0.05;
+      this.mountainsMid1.tilePositionX += 0.3;
+      this.mountainsMid2.tilePositionX += 0.75;
 
-    this.mountainsBack.tilePositionX += 0.05;
-    this.mountainsMid1.tilePositionX += 0.3;
-    this.mountainsMid2.tilePositionX += 0.75;
+      this.movePlayer();
 
-    this.movePlayer();
-
-    this.fpsText.update();
-    this.mc.update();
+      this.fpsText.update();
+      this.mc.update();
+    }
   }
 
   movePlayer(): void {
@@ -143,6 +177,7 @@ export default class GameScene extends Phaser.Scene {
       if (!this.jumping) {
         this.mc.setVelocityY(-600);
         this.jumping = true;
+        this.jumpSound.play();
         this.mc.play("jump");
       }
     }
@@ -160,26 +195,51 @@ export default class GameScene extends Phaser.Scene {
     return this.groundLimit;
   }
 
-  pauseGame(): void {
-
+  addInteractable(): void {
+    let interactable: Interactable;
+    if (this.interactablePool.getLength()) {
+      interactable = this.interactablePool.getFirstNth(
+        Phaser.Math.Between(0, this.interactablePool.getLength() - 1)
+      );
+      interactable.x = this.groundLimit * 64 - 32;
+      interactable.setActive(true);
+      interactable.setVisible(true);
+      this.interactablePool.remove(interactable);
+    } else {
+      this.interactablePool.add(
+        new Coin(this, 0, this.cameras.main.height - 256)
+      );
+      this.interactablePool.add(
+        new Coin(this, 0, this.cameras.main.height - 256)
+      );
+      this.interactablePool.add(
+        new Spike(this, 0, this.cameras.main.height - 96)
+      );
+      this.interactablePool.add(
+        new Spike(this, 0, this.cameras.main.height - 96)
+      );
+      this.addInteractable();
+    }
   }
 
-  // addInteractable(): void {
-  //   let interactable: Interactable;
-  //   if(this.interactablePool.getLength()){
-  //     interactable = this.interactablePool.getFirstNth(Phaser.Math.Between(0,this.interactablePool.getLength()-1));
-  //     interactable.x = (this.groundLimit * 64)-32;
-  //     interactable.active = true;
-  //     interactable.visible = true;
-  //     this.interactablePool.remove(interactable);
-  //   }
-  //   else{
-  //     console.log("xxx")
-  //     this.interactablePool.add(new Coin(this, -32, this.cameras.main.height - 96));
-  //     let interactable = this.interactablePool.getFirst();
-  //     console.log(interactable.x);
-  //     this.interactablePool.add(new Spike(this, -64, this.cameras.main.height - 64));
+  pauseAll(): void {
+    this.mc.play("idle");
+    this.physics.pause();
+    this.isPlaying = false;
+    let gameOverText = this.add.text(
+      this.cameras.main.width / 2,
+      this.cameras.main.height / 2,
+      "Game Over",
+      { fontSize: "44px", fontStyle: "Bold" }
+    );
+    gameOverText.setOrigin(0.5, 0.5);
+  }
 
-  //   }
-  // }
+  getInteractableGroup(): Phaser.GameObjects.Group{
+    return this.interactableGroup;
+  }
+
+  getPlayState(): boolean{
+    return this.isPlaying;
+  }
 }

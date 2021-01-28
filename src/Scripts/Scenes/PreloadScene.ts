@@ -22,6 +22,9 @@ export default class PreloadScene extends Phaser.Scene {
     this.load.image("tileObstacleDuck", "Tiles/platformPack_tile011.png");
     this.load.image("tileObstacleJump", "Tiles/platformPack_tile043.png");
     this.load.image("coin", "Items/platformPack_item008.png");
+    this.load.audio("jump", "../../Sound/Jump.wav");
+    this.load.audio("coin", "../../Sound/Coin.wav");
+    this.load.audio("stab", "../../Sound/Stab.wav");
   }
 
   create(): void {

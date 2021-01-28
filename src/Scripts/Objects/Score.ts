@@ -1,5 +1,5 @@
 import * as Phaser from "phaser";
-
+import GameScene from "../Scenes/GameScene";
 export default class Score extends Phaser.GameObjects.Text {
   private score: number;
   constructor(scene: Phaser.Scene, x: number, y: number) {
@@ -17,8 +17,10 @@ export default class Score extends Phaser.GameObjects.Text {
       delay: 1000,
       loop: true,
       callback: () => {
-        this.score += 10;
-        this.setText("SCORE: " + this.score);
+        if((this.scene as GameScene).getPlayState()){
+          this.score += 10;
+          this.setText("SCORE: " + this.score);
+        }
       },
     });
   }
