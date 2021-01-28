@@ -99,7 +99,7 @@ export default class GameScene extends Phaser.Scene {
       "keydown-R",
       function (event: any) {
         if(!(this as GameScene).isPlaying){
-          console.log("R Pressed");
+          (this as GameScene).scene.restart();
         }
       },
       this
