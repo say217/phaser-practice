@@ -75,6 +75,8 @@ export default class GameScene extends Phaser.Scene {
 
     //this.interactablePool.add();
     this.interactableGroup.add(new Spike(this, (this.groundLimit*64)-32, this.cameras.main.height - 96))
+    let interactable = this.interactableGroup.getFirst();
+    interactable.x;
 
     //Player Stuff
     this.mc = new MC(this, 200, 300);
@@ -123,13 +125,15 @@ export default class GameScene extends Phaser.Scene {
       this
     );
 
-    this.fpsText.update();
+
 
     this.mountainsBack.tilePositionX += 0.05;
     this.mountainsMid1.tilePositionX += 0.3;
     this.mountainsMid2.tilePositionX += 0.75;
 
     this.movePlayer();
+
+    this.fpsText.update();
     this.mc.update();
   }
 
@@ -156,6 +160,10 @@ export default class GameScene extends Phaser.Scene {
     return this.groundLimit;
   }
 
+  pauseGame(): void {
+
+  }
+
   // addInteractable(): void {
   //   let interactable: Interactable;
   //   if(this.interactablePool.getLength()){
@@ -170,7 +178,7 @@ export default class GameScene extends Phaser.Scene {
   //     this.interactablePool.add(new Coin(this, -32, this.cameras.main.height - 96));
   //     let interactable = this.interactablePool.getFirst();
   //     console.log(interactable.x);
-  //     //this.interactablePool.add(new Spike(this, -64, this.cameras.main.height - 64));
+  //     this.interactablePool.add(new Spike(this, -64, this.cameras.main.height - 64));
 
   //   }
   // }
