@@ -18,36 +18,36 @@ export default class MC extends Phaser.Physics.Arcade.Sprite {
     this.setGravity(0, 1000);
 
     this.anims.create({
-      key: 'walk',
-      frames: this.anims.generateFrameNumbers('player', { start: 2, end: 3 }),
+      key: "walk",
+      frames: this.anims.generateFrameNumbers("player", { start: 2, end: 3 }),
       frameRate: 6,
-      repeat: -1
+      repeat: -1,
     });
 
     this.anims.create({
-      key:'idle',
-      frames: this.anims.generateFrameNumbers('player', {start: 0, end: 0}),
+      key: "idle",
+      frames: this.anims.generateFrameNumbers("player", { start: 0, end: 0 }),
       frameRate: 6,
-      repeat: -1
-    })
+      repeat: -1,
+    });
 
     this.anims.create({
-      key:'duck',
-      frames: this.anims.generateFrameNumbers('player', {start:6, end:6}),
+      key: "duck",
+      frames: this.anims.generateFrameNumbers("player", { start: 6, end: 6 }),
       frameRate: 6,
-      repeat: -1
-    })
+      repeat: -1,
+    });
 
     this.anims.create({
-      key:'jump',
-      frames: this.anims.generateFrameNumbers('player', {start:1, end:1}),
+      key: "jump",
+      frames: this.anims.generateFrameNumbers("player", { start: 1, end: 1 }),
       frameRate: 6,
-      repeat: -1
-    })
-    
+      repeat: -1,
+    });
+
     //Initial Player State
     this.jumping = true;
-    this.play('walk');
+    this.play("walk");
 
     //Player Jump Control
     this.scene.input.keyboard.on(
@@ -64,13 +64,13 @@ export default class MC extends Phaser.Physics.Arcade.Sprite {
       this
     );
   }
-  
+
   //Set-Get Jump State
-  getJumpingState(): boolean{
+  getJumpingState(): boolean {
     return this.jumping;
   }
 
-  setJumpingState(state: boolean) : void{
+  setJumpingState(state: boolean): void {
     this.jumping = state;
   }
 }

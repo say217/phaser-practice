@@ -13,7 +13,7 @@ export default class GameManager {
     this.bg = this.scene.getBG();
   }
 
-  collisionEvent(): void{
+  collisionEvent(): void {
     // Collision to Enable Jump
     this.scene.physics.collide(
       this.scene.getMC(),
@@ -41,7 +41,7 @@ export default class GameManager {
     );
   }
 
-  moveBG(): void{
+  moveBG(): void {
     this.bg[0].tilePositionX += 0.05;
     this.bg[1].tilePositionX += 0.3;
     this.bg[2].tilePositionX += 0.75;
