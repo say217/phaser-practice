@@ -1,12 +1,15 @@
 import * as Phaser from "phaser";
+import GameScene from "../Scenes/GameScene";
 
 export default class MC extends Phaser.Physics.Arcade.Sprite {
+  private jumping: boolean;
+
   constructor(scene: Phaser.Scene, x: number, y: number) {
     super(scene, x, y, "player");
 
     this.scene.add.existing(this);
 
-    scene.physics.add.existing(this);
+    this.scene.physics.add.existing(this);
 
     this.setInteractive();
 
@@ -42,6 +45,32 @@ export default class MC extends Phaser.Physics.Arcade.Sprite {
       repeat: -1
     })
     
+    //Initial Player State
+    this.jumping = true;
     this.play('walk');
+
+    //Player Jump Control
+    this.scene.input.keyboard.on(
+      "keydown-UP",
+      (event: any) => {
+        if (!this.jumping) {
+          console.log("jumping");
+          this.setVelocityY(-600);
+          this.jumping = true;
+          this.play("jump");
+          (this.scene as GameScene).getJumpSound().play();
+        }
+      },
+      this
+    );
+  }
+  
+  //Set-Get Jump State
+  getJumpingState(): boolean{
+    return this.jumping;
+  }
+
+  setJumpingState(state: boolean) : void{
+    this.jumping = state;
   }
 }

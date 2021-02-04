@@ -6,17 +6,14 @@ import Score from "../Objects/Score";
 import Interactable from "../Objects/Interactable";
 import Coin from "../Objects/Coin";
 import Spike from "../Objects/Spike";
-import { parseConfigFileTextToJson } from "typescript";
-
+import GameManager from "../Utils/GameManager";
 export default class GameScene extends Phaser.Scene {
   private fpsText: FpsText;
   private mc: MC;
-  private cursorKeys: Phaser.Types.Input.Keyboard.CursorKeys;
-  private jumping: boolean;
   private mountainsBack: Phaser.GameObjects.TileSprite;
   private mountainsMid1: Phaser.GameObjects.TileSprite;
   private mountainsMid2: Phaser.GameObjects.TileSprite;
-  private scoreText: Score;
+  private scoreObj: Score;
   private groundLimit: number;
   private groundGroup: Phaser.GameObjects.Group;
   private interactableGroup: Phaser.GameObjects.Group;
@@ -25,6 +22,7 @@ export default class GameScene extends Phaser.Scene {
   private jumpSound: Phaser.Sound.BaseSound;
   private coinSound: Phaser.Sound.BaseSound;
   private stabSound: Phaser.Sound.BaseSound;
+  private gameManager: GameManager;
 
   constructor() {
     super({ key: "GameScene" });
@@ -34,9 +32,9 @@ export default class GameScene extends Phaser.Scene {
     console.log("Game Started");
 
     //Audio Stuff
-    this.jumpSound = this.sound.add('jump')
-    this.coinSound = this.sound.add('coin')
-    this.stabSound = this.sound.add('stab')
+    this.jumpSound = this.sound.add("jump");
+    this.coinSound = this.sound.add("coin");
+    this.stabSound = this.sound.add("stab");
 
     //BG Stuff
     this.mountainsBack = this.add.tileSprite(
@@ -85,11 +83,10 @@ export default class GameScene extends Phaser.Scene {
 
     //Player Stuff
     this.mc = new MC(this, 200, 300);
-    this.cursorKeys = this.input.keyboard.createCursorKeys();
 
     //GUI Stuff
     this.fpsText = new FpsText(this);
-    this.scoreText = new Score(this, this.cameras.main.width / 2, 50);
+    this.scoreObj = new Score(this, this.cameras.main.width / 2, 50);
 
     //Playing State
     this.isPlaying = true;
@@ -97,90 +94,33 @@ export default class GameScene extends Phaser.Scene {
     //Reset Button
     this.input.keyboard.on(
       "keydown-R",
-      function (event: any) {
-        if(!(this as GameScene).isPlaying){
+      () => {
+        if (!this.isPlaying) {
           this.unhookListener();
           this.scene.start("GameScene");
         }
       },
       this
     );
-    
+
     this.time.addEvent({
       delay: 5000,
       loop: true,
       callback: () => {
-        if(this.isPlaying){
+        if (this.isPlaying) {
           this.addInteractable();
         }
       },
     });
+
+    this.gameManager = new GameManager(this);
   }
 
   update(): void {
     if (this.isPlaying) {
-      //enable jump
-      this.physics.collide(
-        this.mc,
-        this.groundGroup,
-        function (mc, ground) {
-          if (this.jumping) {
-            this.jumping = false;
-            this.mc.play("walk");
-          }
-        },
-        null,
-        this
-      );
-
-      //obstacle or coin collision
-      this.physics.overlap(
-        this.mc,
-        this.interactableGroup,
-        function (mc, interactable: Interactable) {
-          console.log("masuk 1");
-          console.log(interactable.IsObstacle());
-          switch (interactable.IsObstacle()) {
-            case false:
-              //is a Coin
-              console.log("masuk coin");
-              this.coinSound.play();
-              this.scoreText.incrementScore();
-              this.interactableGroup.killAndHide(interactable);
-              this.interactableGroup.remove(interactable);
-              break;
-            case true:
-              //is an Obstacle
-              console.log("masuk obstacle");
-              this.stabSound.play();
-              (interactable.scene as GameScene).pauseAll();
-              break;
-          }
-        },
-        null,
-        this
-      );
-
-      this.mountainsBack.tilePositionX += 0.05;
-      this.mountainsMid1.tilePositionX += 0.3;
-      this.mountainsMid2.tilePositionX += 0.75;
-
-      this.movePlayer();
-
+      this.gameManager.collisionEvent();
+      this.gameManager.moveBG();
       this.fpsText.update();
-      this.mc.update();
-    }
-  }
-
-  movePlayer(): void {
-    //Jumping
-    if (this.cursorKeys.up.isDown) {
-      if (!this.jumping) {
-        this.mc.setVelocityY(-600);
-        this.jumping = true;
-        this.jumpSound.play();
-        this.mc.play("jump");
-      }
     }
   }
 
@@ -190,10 +130,6 @@ export default class GameScene extends Phaser.Scene {
         new Ground(this, i * 64 + 32, this.cameras.main.height - 32)
       );
     }
-  }
-
-  getGroundLimit(): number {
-    return this.groundLimit;
   }
 
   addInteractable(): void {
@@ -244,27 +180,55 @@ export default class GameScene extends Phaser.Scene {
     restartText.setOrigin(0.5, 0.5);
   }
 
-  getInteractableGroup(): Phaser.GameObjects.Group{
+  unhookListener(): void {
+    this.groundGroup.getChildren().forEach((item: Ground, index) => {
+      item.removeUpdateListener();
+    });
+    this.interactableGroup.getChildren().forEach((item: Ground, index) => {
+      item.removeUpdateListener();
+    });
+    this.interactablePool.getChildren().forEach((item: Ground, index) => {
+      item.removeUpdateListener();
+    });
+  }
+
+  //Getter
+  getMC(): MC {
+    return this.mc;
+  }
+
+  getGroundGroup(): Phaser.GameObjects.Group {
+    return this.groundGroup;
+  }
+  getInteractableGroup(): Phaser.GameObjects.Group {
     return this.interactableGroup;
   }
 
-  getPlayState(): boolean{
+  getScoreObj(): Score {
+    return this.scoreObj;
+  }
+
+  getPlayState(): boolean {
     return this.isPlaying;
   }
 
-  unhookListener(): void{
-    this.groundGroup.getChildren().forEach((item: Ground, index)=>{
-      console.log(item.x);
-      item.removeUpdateListener();
-    });
-    this.interactableGroup.getChildren().forEach((item: Ground, index)=>{
-      console.log(item.x);
-      item.removeUpdateListener();
+  getGroundLimit(): number {
+    return this.groundLimit;
+  }
 
-    });
-    this.interactablePool.getChildren().forEach((item: Ground, index)=>{
-      console.log(item.x);
-      item.removeUpdateListener();
-    });
+  getJumpSound(): Phaser.Sound.BaseSound {
+    return this.jumpSound;
+  }
+
+  getStabSound(): Phaser.Sound.BaseSound {
+    return this.stabSound;
+  }
+
+  getCoinSound(): Phaser.Sound.BaseSound {
+    return this.coinSound;
+  }
+
+  getBG(): Phaser.GameObjects.TileSprite[] {
+    return [this.mountainsBack, this.mountainsMid1, this.mountainsMid2];
   }
 }
